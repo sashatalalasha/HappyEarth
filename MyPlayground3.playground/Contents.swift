@@ -207,7 +207,7 @@ class PlayScene: SKScene {
         
         if let node = self.selectedNode {
             if let x = paperBin?.intersects(node), x == true {
-                node.name == "paper.png" || node.name == "cartboard.png" ? putInBin(node: node as! SKSpriteNode) : moveToRandomPos(remove: true)
+                node.name == "paper.png" || node.name == "cardboard.png" ? putInBin(node: node as! SKSpriteNode) : moveToRandomPos(remove: true)
             }
             else if let x = plasticBin?.intersects(node), x == true {
                 node.name == "plastic.png" || node.name == "juice.png" || node.name == "yogurt.png" ? putInBin(node: node as! SKSpriteNode) : moveToRandomPos(remove: true)
