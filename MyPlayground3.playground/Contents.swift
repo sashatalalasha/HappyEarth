@@ -1,61 +1,9 @@
-//: A SpriteKit based Playground
+//: Hi! Thanks for choosing this playground. Disable "EnableResults" and press run. Hope you will enjoy this game!
 
 import PlaygroundSupport
 import SpriteKit
-import Foundation
 
-
-
-class IMProgressBar : SKNode{
-
-var emptySprite : SKSpriteNode? = nil
-var progressBar : SKCropNode
-    
-init(emptyImageName: String!,filledImageName : String)
-{
-    progressBar = SKCropNode()
-    super.init()
-    let filledImage  = SKSpriteNode(imageNamed: filledImageName)
-    filledImage.size = CGSize(width: 400, height: 100)
-    progressBar.addChild(filledImage)
-    progressBar.maskNode = SKSpriteNode(color: UIColor.white,
-        size: CGSize(width: filledImage.size.width * 2, height: filledImage.size.height * 2))
-
-    progressBar.maskNode?.position = CGPoint(x: filledImage.size.width / 2,y: filledImage.size.height / 2)
-    progressBar.zPosition = 0.1
-    self.addChild(progressBar)
-
-    if emptyImageName != nil{
-        emptySprite = SKSpriteNode.init(imageNamed: emptyImageName)
-        self.addChild(emptySprite!)
-    }
-}
-func setXProgress(xProgress : CGFloat){
-    var value = xProgress
-    if xProgress < 0{
-        value = 0
-    }
-    if xProgress > 1 {
-        value = 1
-    }
-    progressBar.maskNode?.xScale = value
-}
-
-func setYProgress(yProgress : CGFloat){
-    var value = yProgress
-    if yProgress < 0{
-        value = 0
-    }
-    if yProgress > 1 {
-        value = 1
-    }
-    progressBar.maskNode?.yScale = value
-}
-required init?(coder aDecoder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-}
-}
-
+import AVFoundation
 
 
 class GameScene: SKScene {
@@ -63,23 +11,13 @@ class GameScene: SKScene {
     private var label : SKLabelNode!
     
     override func didMove(to view: SKView) {
+        
         let backgroundImage = SKSpriteNode(imageNamed: "Wallpaper.png")
         backgroundImage.size = self.frame.size
         backgroundImage.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
         backgroundImage.isUserInteractionEnabled = true
         self.addChild(backgroundImage)
         
-        
-        // Present the scene
-        
-        /*let label = SKLabelNode(fontNamed: "Helvetica Neue")
-        label.text = "Hi!"
-        label.fontSize = 30
-        label.fontColor = SKColor.orange
-        label.position = CGPoint(x: self.frame.width/2.0 , y: self.frame.height/2.0)
-        label.horizontalAlignmentMode = .center
-        label.verticalAlignmentMode = .center
-        self.addChild(label)*/
         let startButton = SKSpriteNode(imageNamed: "playButton.png")
         startButton.size = CGSize(width: 100, height: 100)
         startButton.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
@@ -88,102 +26,103 @@ class GameScene: SKScene {
 
         startButton.isHidden = false
         self.addChild(startButton)
-        
     }
-    
-    
 
-    
-    func touchDown(atPoint pos : CGPoint) {
-        
-    }
-    
-    func touchMoved(toPoint pos : CGPoint) {
-       
-    }
-    
-    func touchUp(atPoint pos : CGPoint) {
-        
-    }
-    
-        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             let location = touch.location(in: self)
             let touchedNode = atPoint(location)
-            if touchedNode.name == "StartButton" {
-                print("start")
-                if let game = PlayScene(fileNamed: "PlayScene") {
-                    game.scaleMode = .aspectFill
-                print("star2t")
             
+            if touchedNode.name == "StartButton" {
+                if let game = PlayScene(fileNamed: "PlayScene") {
+                    game.scaleMode = .aspectFit
                     sceneView.presentScene(game)
                 }
-            
-                
-                // Call the function here.
             }
         }
-    }
-    
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { touchMoved(toPoint: t.location(in: self)) }
-    }
-    
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { touchUp(atPoint: t.location(in: self)) }
-    }
-    
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { touchUp(atPoint: t.location(in: self)) }
-    }
-    
-    override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
     }
 }
 
 class PlayScene: SKScene {
     
+    private var player: AVPlayer?
     
-    private var touchedNodes: [SKNode] = []
-    private var pos: (x: CGFloat, y: CGFloat)?
+    // An array of all trash nodes
+    private var allNodes: [SKSpriteNode] = []
     private var selectedNode: SKNode?
     private var touchLocation: CGPoint?
     private var positionOfNode: CGPoint?
-    private var randomElem = ["plastic.png", "bio.png", "glas.png", "paper.png"]
+    private var randomElem = ["plastic.png", "bio.png", "can.png", "paper.png", "canCoke.png", "pear.png", "cardboard.png", "juice.png", "yogurt.png"]
     
     private var paperBin: SKSpriteNode?
     private var plasticBin: SKSpriteNode?
     private var trashBin: SKSpriteNode?
     private var cansBin: SKSpriteNode?
     
-    private var progressBar: IMProgressBar?
+    // Number of health units
+    private var num = 4
     
-
     
     override func didMove(to view: SKView) {
+        print(Double(-self.frame.maxX/2.0))
         let backgroundImage = SKSpriteNode(imageNamed: "Wallpaper.png" )
         backgroundImage.size = self.frame.size
         backgroundImage.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
         backgroundImage.isUserInteractionEnabled = true
         self.addChild(backgroundImage)
         
-        progressBar = IMProgressBar(emptyImageName: nil,filledImageName: "bar2.png")
-        progressBar?.position = CGPoint(x: 200, y: 250)
-              
-        self.addChild(progressBar!)
+        placeHealth()
     
-        
-        
         for _ in 1...10 {
-                          createTrash()
-                     }
+            allNodes.append(createTrash())
+        }
         
         paperBin = placeBin(type: "paper-bin.png", pos: CGPoint(x: -120, y: -20))
         plasticBin = placeBin(type: "plastic-bin.png", pos: CGPoint(x: 30, y: -20))
         trashBin = placeBin(type: "trash-bin.png", pos: CGPoint(x: 180, y: -20))
         cansBin = placeBin(type: "cans-bin.png", pos: CGPoint(x: 330, y: -20))
+    }
+    
+    func placeHealth() {
+        for i in 1...4 {
+            let heart = SKSpriteNode(imageNamed: "fullHeart.png")
+            heart.zPosition = 2
+            heart.size = CGSize(width: 75, height: 75)
+            heart.position = CGPoint(x: -350 + 80*(i - 1), y: 250)
+            heart.name = "heart\(i)"
+            self.addChild(heart)
+        }
         
+    }
+    
+    func removeHealth(count: Int) {
+       let child = childNode(withName: "heart\(count)")
+        let position = child?.position
+        child?.removeFromParent()
+        let heart = SKSpriteNode(imageNamed: "emptyHeart.png")
+        heart.zPosition = 2
+        heart.size = CGSize(width: 75, height: 75)
+        // replace health unit with empty one
+        heart.position = position!
+        self.addChild(heart)
+        num-=1
+    }
+    
+    func endGame(reason: String) {
+        UserDefaults.standard.removeObject(forKey: "Status")
+        // Set status of game (won or lost)
+        UserDefaults.standard.set(reason, forKey: "Status")
+        let finish = EndScene(fileNamed: "EndScene")!
+            finish.scaleMode = .aspectFit
+            sceneView.presentScene(finish)
+    
+    }
+    
+    func playSound(name: String) {
+        let path = Bundle.main.path(forResource: name, ofType : "m4a")!
+        let url = URL(fileURLWithPath : path)
+        player = AVPlayer(url: url)
+        player?.play()
     }
     
     func placeBin(type: String, pos: CGPoint) -> SKSpriteNode {
@@ -196,7 +135,7 @@ class PlayScene: SKScene {
         return bin
     }
     
-    func createTrash() {
+    func createTrash() -> SKSpriteNode {
         let category = randomElem.randomElement()
         let trash = SKSpriteNode(imageNamed: category!)
         trash.zPosition = 2
@@ -204,64 +143,59 @@ class PlayScene: SKScene {
         trash.position = randomPosition()
         trash.name = category!
         self.addChild(trash)
-
-        
-
+        return trash
      }
     
+    func checkIfLost() {
+        // If number of health units is 0, user looses the game
+        if(num == 0) {
+            endGame(reason: "lost")
+        }
+    }
+    
     func randomPosition() -> CGPoint {
-          
-        let x = Double.random(in: Double(-((view?.bounds.maxX)!/2.0))..<Double((view?.bounds.maxX)!/2.0))
-               
-        let y = Double.random(in: Double(-((view?.bounds.maxY)!/2.0))..<Double(-(view?.bounds.maxY)!/3.7))
-        
+        let x = Double.random(in: (Double(-self.frame.maxX) + 100.0) ..< (Double(self.frame.maxX) - 100.0))
+        let y = Double.random(in: (Double(-self.frame.maxY ) + 50.0)..<Double(-self.frame.maxY/3.7))
         return CGPoint(x: x, y: y)
-      }
-    
-
-    
+    }
+ 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             let location = touch.location(in: self)
             let touchedNewNode = atPoint(location)
             self.selectedNode = touchedNewNode
         self.positionOfNode = touchedNewNode.position
-    
-            
-            
         }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
-            
             self.selectedNode!.position = touch.location(in: self)
         }
-        /*if let touch = touches.first, let node = self.selectedNode {
-            let touchLocation = touch.location(in: self)
-            node.position.x = touchLocation.x
-            
-    
-              node.position = touchLocation
-            
-        
-        }*/
-            
-    }
-    
-    func changePosition(node: SKSpriteNode, pos: CGPoint) {
-        node.position = pos
-        self.selectedNode = nil
-            self.positionOfNode = nil
-        
     }
     
     func putInBin(node: SKSpriteNode) {
         node.removeFromParent()
+        playSound(name: "clap")
         self.selectedNode = nil
         self.positionOfNode = nil
         
-        progressBar?.setXProgress(xProgress: 0.7)
+        if(allNodes.map{ $0.parent == nil }.allSatisfy({ $0 == true })) {
+            endGame(reason: "won")
+        }
+    }
+    
+    func moveToRandomPos(remove: Bool) {
+        // If trash was put in a wrong bin, delete one heath unit
+        if(remove) {
+            removeHealth(count: num)
+            playSound(name: "err")
+        }
+        let position = randomPosition()
+        let action = SKAction.move(to: position, duration: 1)
+        self.selectedNode?.run(action)
+        self.selectedNode = nil
+        checkIfLost()
         
     }
 
@@ -269,59 +203,117 @@ class PlayScene: SKScene {
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first, self.selectedNode != nil {
             selectedNode!.position = touch.location(in: self)
-            //self.selectedNode = nil
         }
         
         if let node = self.selectedNode {
-            if let x = paperBin?.intersects(node), x == true, node.name == "paper.png" {
-                putInBin(node: node as! SKSpriteNode)
+            if let x = paperBin?.intersects(node), x == true {
+                node.name == "paper.png" || node.name == "cartboard.png" ? putInBin(node: node as! SKSpriteNode) : moveToRandomPos(remove: true)
             }
-            else if let x = plasticBin?.intersects(node), x == true, node.name == "plastic.png" {
-                putInBin(node: node as! SKSpriteNode)
+            else if let x = plasticBin?.intersects(node), x == true {
+                node.name == "plastic.png" || node.name == "juice.png" || node.name == "yogurt.png" ? putInBin(node: node as! SKSpriteNode) : moveToRandomPos(remove: true)
             }
-            else if let x = trashBin?.intersects(node), x == true, node.name == "bio.png" {
-                putInBin(node: node as! SKSpriteNode)
-                       }
-            else if let x = cansBin?.intersects(node), x == true, node.name == "glas.png" {
-                putInBin(node: node as! SKSpriteNode)
-                       }
+            else if let x = trashBin?.intersects(node), x == true {
+                node.name == "bio.png" || node.name == "pear.png" ? putInBin(node: node as! SKSpriteNode) : moveToRandomPos(remove: true)
+            }
+            else if let x = cansBin?.intersects(node), x == true {
+                node.name == "can.png" || node.name == "canCoke.png" ? putInBin(node: node as! SKSpriteNode) : moveToRandomPos(remove: true)
+            }
             else {
-                
-               
-                let position = randomPosition()
-                let action = SKAction.move(to: position, duration: 1)
-                self.selectedNode?.run(action)
-                 self.selectedNode = nil
-   
-                return
-            
-                //if Double(node.position.y) > Double(-(view?.bounds.maxY)!/2.0) {
-                
-            //}
+                // If user drags trash somewhere else, place it in random location
+                moveToRandomPos(remove: false)
+            }
         }
-        }
-    
-    
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.selectedNode = nil
         self.positionOfNode = nil
      }
-    
-    
 }
+
+class EndScene: SKScene {
+    
+    override func didMove(to view: SKView) {
+        let status = UserDefaults.standard.string(forKey: "Status")
+        
+        let backgroundImage: SKSpriteNode?
+        let label = SKLabelNode(fontNamed: "Helvetica Neue")
+        // If user wins the game
+        if(status == "won") {
+            backgroundImage = SKSpriteNode(imageNamed: "happyEarth.png" )
+             label.text = "You won!Congratulations!"
+            backgroundImage!.size = self.frame.size
+            backgroundImage!.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
+            backgroundImage!.isUserInteractionEnabled = true
+            self.addChild(backgroundImage!)
+        }
+        else { // If user looses the game
+             backgroundImage = SKSpriteNode(imageNamed: "sadEarth.png" )
+            backgroundImage!.size = self.frame.size
+            backgroundImage!.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
+            backgroundImage!.isUserInteractionEnabled = true
+            self.addChild(backgroundImage!)
+            label.text = "You lost! But you can try again to save the planet :)"
+            
+            label.numberOfLines = 0
+            label.preferredMaxLayoutWidth = 500
+        }
+        label.fontSize = 40
+        label.fontName = "AmericanTypewriter-Bold"
+        label.position = CGPoint(x: self.frame.midX , y: self.frame.midY + 70)
+        label.zPosition = 1
+        self.addChild(label)
+        
+        let retryButton = SKSpriteNode(imageNamed: "retryButton.png")
+        retryButton.size = CGSize(width: 100, height: 100)
+        retryButton.position = CGPoint(x: self.frame.midX, y: self.frame.midY - 15)
+        retryButton.name = "RetryButton"
+        retryButton.zPosition = 1
+        retryButton.isHidden = false
+        self.addChild(retryButton)
+      }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+           for touch in touches {
+               let location = touch.location(in: self)
+               let touchedNode = atPoint(location)
+            // play one more time
+               if touchedNode.name == "RetryButton" {
+                   if let game = PlayScene(fileNamed: "PlayScene") {
+                       game.scaleMode = .aspectFit
+                       sceneView.presentScene(game)
+                   }
+               }
+           }
+    }
+}
+
 
 // Load the SKScene from 'GameScene.sks'
 let sceneView = SKView(frame: CGRect(x:0 , y:0, width: 700, height: 700))
 sceneView.ignoresSiblingOrder = true
+PlaygroundSupport.PlaygroundPage.current.liveView = sceneView
+// Create sharable status of game between scenes
+var status = UserDefaults.standard
+status.set("game", forKey: "Status")
+
+var player: AVAudioPlayer?
+
+let path = Bundle.main.path(forResource: "cave.m4a", ofType:nil)!
+let url = URL(fileURLWithPath: path)
+
+do {
+    player = try AVAudioPlayer(contentsOf: url)
+    //Play music through the whole game
+    player?.numberOfLoops = -1
+    player?.play()
+} catch {
+    print("Could not load file")
+}
 
 
 if let scene = GameScene(fileNamed: "GameScene") {
     // Set the scale mode to scale to fit the window
-    scene.scaleMode = .aspectFill
-    
+    scene.scaleMode = .aspectFit
     sceneView.presentScene(scene)
 }
-
-PlaygroundSupport.PlaygroundPage.current.liveView = sceneView
