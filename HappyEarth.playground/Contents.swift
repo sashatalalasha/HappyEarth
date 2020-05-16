@@ -1,8 +1,8 @@
-//: Hi! Thanks for choosing this playground. Disable "EnableResults" and press run. Hope you will enjoy this game!
+//: # HappyEarth
+//:  ## Hello, User! This interactive playground is designed to help you learning how to sort garbage. We are responsible for our mother nature, so lets learn how to separate waste and make recycling easier!
 
 import PlaygroundSupport
 import SpriteKit
-
 import AVFoundation
 
 
@@ -70,6 +70,13 @@ class PlayScene: SKScene {
         backgroundImage.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
         backgroundImage.isUserInteractionEnabled = true
         self.addChild(backgroundImage)
+        let backButton = SKSpriteNode(imageNamed: "backButton.png")
+        backButton.size = CGSize(width: 200, height: 50)
+        backButton.position = CGPoint(x: self.frame.minX + 150, y: self.frame.maxY - 50)
+        backButton.name = "BackButton"
+        backButton.zPosition = 1
+        backButton.isHidden = false
+        self.addChild(backButton)
         
         placeHealth()
     
@@ -77,10 +84,10 @@ class PlayScene: SKScene {
             allNodes.append(createTrash())
         }
         
-        paperBin = placeBin(type: "paper-bin.png", pos: CGPoint(x: -120, y: -20))
-        plasticBin = placeBin(type: "plastic-bin.png", pos: CGPoint(x: 30, y: -20))
-        trashBin = placeBin(type: "trash-bin.png", pos: CGPoint(x: 180, y: -20))
-        cansBin = placeBin(type: "cans-bin.png", pos: CGPoint(x: 330, y: -20))
+        paperBin = placeBin(type: "paper-bin.png", pos: CGPoint(x: -300, y: -20))
+        plasticBin = placeBin(type: "plastic-bin.png", pos: CGPoint(x: -100, y: -20))
+        trashBin = placeBin(type: "trash-bin.png", pos: CGPoint(x: 100, y: -20))
+        cansBin = placeBin(type: "cans-bin.png", pos: CGPoint(x: 300, y: -20))
     }
     
     func placeHealth() {
@@ -92,7 +99,6 @@ class PlayScene: SKScene {
             heart.name = "heart\(i)"
             self.addChild(heart)
         }
-        
     }
     
     func removeHealth(count: Int) {
@@ -112,9 +118,10 @@ class PlayScene: SKScene {
         UserDefaults.standard.removeObject(forKey: "Status")
         // Set status of game (won or lost)
         UserDefaults.standard.set(reason, forKey: "Status")
-        let finish = EndScene(fileNamed: "EndScene")!
+        if let finish = EndScene(fileNamed: "EndScene") {
             finish.scaleMode = .aspectFit
             sceneView.presentScene(finish)
+        }
     
     }
     
@@ -128,7 +135,7 @@ class PlayScene: SKScene {
     func placeBin(type: String, pos: CGPoint) -> SKSpriteNode {
         let bin = SKSpriteNode(imageNamed: type)
         bin.zPosition = 1
-        bin.size = CGSize(width: 150, height: 200)
+        bin.size = CGSize(width: 140, height: 170)
         bin.position = pos
         bin.isUserInteractionEnabled = true
         self.addChild(bin)
@@ -139,7 +146,7 @@ class PlayScene: SKScene {
         let category = randomElem.randomElement()
         let trash = SKSpriteNode(imageNamed: category!)
         trash.zPosition = 2
-        trash.size = CGSize(width: 100, height: 100)
+        trash.size = CGSize(width: 60, height: 70)
         trash.position = randomPosition()
         trash.name = category!
         self.addChild(trash)
@@ -163,8 +170,16 @@ class PlayScene: SKScene {
         for touch in touches {
             let location = touch.location(in: self)
             let touchedNewNode = atPoint(location)
-            self.selectedNode = touchedNewNode
-        self.positionOfNode = touchedNewNode.position
+            if touchedNewNode.name == "BackButton" {
+                if let game = GameScene(fileNamed: "GameScene") {
+                    game.scaleMode = .aspectFit
+                    sceneView.presentScene(game)
+                }
+            }
+            else {
+                self.selectedNode = touchedNewNode
+                self.positionOfNode = touchedNewNode.position
+            }
         }
     }
     
@@ -179,7 +194,7 @@ class PlayScene: SKScene {
         playSound(name: "clap")
         self.selectedNode = nil
         self.positionOfNode = nil
-        
+        // If all trash is sorted, user wins
         if(allNodes.map{ $0.parent == nil }.allSatisfy({ $0 == true })) {
             endGame(reason: "won")
         }
@@ -241,11 +256,12 @@ class EndScene: SKScene {
         // If user wins the game
         if(status == "won") {
             backgroundImage = SKSpriteNode(imageNamed: "happyEarth.png" )
-             label.text = "You won!Congratulations!"
             backgroundImage!.size = self.frame.size
             backgroundImage!.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
             backgroundImage!.isUserInteractionEnabled = true
             self.addChild(backgroundImage!)
+            label.text = "You won!Congratulations!"
+            label.fontColor = UIColor(red: 0.0, green: 153.0, blue: 0.0, alpha: 1.0)
         }
         else { // If user looses the game
              backgroundImage = SKSpriteNode(imageNamed: "sadEarth.png" )
@@ -253,10 +269,8 @@ class EndScene: SKScene {
             backgroundImage!.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
             backgroundImage!.isUserInteractionEnabled = true
             self.addChild(backgroundImage!)
-            label.text = "You lost! But you can try again to save the planet :)"
-            
-            label.numberOfLines = 0
-            label.preferredMaxLayoutWidth = 500
+            label.text = "You lost!But you can try again to save the planet:)"
+            label.fontColor = .red
         }
         label.fontSize = 40
         label.fontName = "AmericanTypewriter-Bold"
